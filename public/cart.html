@@ -1,0 +1,305 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Andhra Tiffens</title>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  <script src="https://checkout.razorpay.com/v1/checkout.js"></script>
+
+  <style>
+    body {
+      font-family: Arial;
+      margin: 0;
+      background: #fff8ef;
+    }
+
+    header {
+      background: #7b2d26;
+      color: white;
+      padding: 15px;
+      text-align: center;
+    }
+
+    section {
+      padding: 15px;
+    }
+
+    h3 {
+      margin-top: 25px;
+      color: #333;
+    }
+
+    .menu-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+      gap: 10px;
+    }
+
+    .menu-card {
+      background: white;
+      padding: 10px;
+      border-radius: 8px;
+      box-shadow: 0 2px 5px rgba(0,0,0,0.15);
+      text-align: center;
+    }
+
+    .menu-card img {
+      width: 100%;
+      height: 120px;
+      object-fit: cover;
+      border-radius: 6px;
+      margin-bottom: 6px;
+    }
+
+    .menu-card button {
+      margin-top: 6px;
+      background: #7b2d26;
+      color: white;
+      border: none;
+      padding: 6px 10px;
+      border-radius: 4px;
+      cursor: pointer;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      background: white;
+      margin-top: 10px;
+    }
+
+    th, td {
+      padding: 8px;
+      border-bottom: 1px solid #ddd;
+      text-align: center;
+    }
+
+    th {
+      background: #f3e1d3;
+    }
+
+    .total-bar {
+      position: sticky;
+      bottom: 0;
+      background: white;
+      padding: 12px;
+      box-shadow: 0 -2px 6px rgba(0,0,0,0.2);
+    }
+
+    input {
+      width: 100%;
+      padding: 8px;
+      margin-top: 6px;
+    }
+
+    .order-btn {
+      width: 100%;
+      margin-top: 10px;
+      background: #2e7d32;
+      color: white;
+      padding: 10px;
+      border: none;
+      font-size: 16px;
+      border-radius: 6px;
+      cursor: pointer;
+    }
+
+    .disabled-btn {
+      background: gray !important;
+      cursor: not-allowed !important;
+    }
+  </style>
+</head>
+
+<body>
+
+<header>
+  <h2>🍽️ Andhra Tiffens</h2>
+  <p>Just Like Amma Makes</p>
+</header>
+
+<section>
+
+<h3>Menu</h3>
+<div class="menu-grid" id="menuGrid"></div>
+
+<h3>🛒 Your Cart</h3>
+<table>
+  <thead>
+    <tr><th>Item</th><th>Qty</th><th>Total</th></tr>
+  </thead>
+  <tbody id="cartBody"></tbody>
+</table>
+
+</section>
+
+<div class="total-bar">
+  <b>Total: ₹ <span id="total">0</span></b>
+
+  <input id="name" placeholder="Your Name">
+  <input id="mobile" placeholder="Mobile Number">
+  <input id="address" placeholder="Delivery Address">
+
+  <button class="order-btn" onclick="placeOrder()">Pay & Place Order</button>
+</div>
+
+<script>
+
+let cart = [];
+
+/* ================= MENU DYNAMIC LOAD ================= */
+
+fetch('/items')
+.then(res => res.json())
+.then(items => {
+
+  const grid = document.getElementById("menuGrid");
+
+  items.forEach(item => {
+
+    grid.innerHTML += `
+      <div class="menu-card">
+        <img src="/images/${item.image}">
+        <b>${item.name}</b><br>
+        ₹${item.price}
+        <button 
+          onclick="addItem('${item.name}', ${item.price}, '${item.image}')"
+          ${item.available ? "" : "disabled"}
+          class="${item.available ? "" : "disabled-btn"}">
+          ${item.available ? "Add" : "Not Available"}
+        </button>
+      </div>
+    `;
+  });
+
+});
+
+
+/* ================= CART LOGIC ================= */
+
+function addItem(name, price, image) {
+  const item = cart.find(i => i.name === name);
+  if (item) item.qty++;
+  else cart.push({ name, price, qty: 1, image });
+  renderCart();
+}
+
+function changeQty(name, delta) {
+  const item = cart.find(i => i.name === name);
+  if (!item) return;
+  item.qty += delta;
+  if (item.qty <= 0) {
+    cart = cart.filter(i => i.name !== name);
+  }
+  renderCart();
+}
+
+function renderCart() {
+  const body = document.getElementById("cartBody");
+  body.innerHTML = "";
+  let subtotal = 0;
+
+  cart.forEach(item => {
+
+    subtotal += item.price * item.qty;
+
+    body.innerHTML += `
+      <tr>
+        <td style="display:flex;align-items:center;gap:8px;">
+          <img src="/images/${item.image}" 
+               style="width:40px;height:40px;border-radius:6px;">
+          ${item.name}
+        </td>
+        <td>
+          <button onclick="changeQty('${item.name}', -1)">−</button>
+          ${item.qty}
+          <button onclick="changeQty('${item.name}', 1)">+</button>
+        </td>
+        <td>₹${item.price * item.qty}</td>
+      </tr>
+    `;
+  });
+
+  let delivery = subtotal > 0 && subtotal < 120 ? 30 : 0;
+  let total = subtotal + delivery;
+
+  document.getElementById("total").innerText = total;
+}
+
+
+/* ================= PAYMENT ================= */
+
+function placeOrder() {
+
+  const name = document.getElementById("name").value;
+  const mobile = document.getElementById("mobile").value;
+  const address = document.getElementById("address").value;
+
+  if (!name || !mobile || !address || cart.length === 0) {
+    alert("Fill all details & add items");
+    return;
+  }
+
+  const subtotal = cart.reduce((sum, item) => sum + item.price * item.qty, 0);
+
+  fetch('/create-order', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ name, mobile, address, items: cart, subtotal })
+  })
+  .then(res => res.json())
+  .then(data => {
+
+    var options = {
+      key: data.key,
+      amount: data.amount * 100,
+      currency: "INR",
+      order_id: data.razorpayOrderId,
+      name: "Andhra Tiffens",
+
+      handler: function (response) {
+
+        fetch('/verify-payment', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            razorpay_order_id: response.razorpay_order_id,
+            razorpay_payment_id: response.razorpay_payment_id,
+            razorpay_signature: response.razorpay_signature,
+            orderCode: data.orderCode
+          })
+        })
+        .then(res => res.json())
+        .then(result => {
+
+          if (result.success) {
+
+            document.body.innerHTML = `
+              <div style="text-align:center;padding:40px;font-family:Arial;">
+                <h2 style="color:green;">✅ Order Placed Successfully</h2>
+                <h3>Order ID: ${data.orderCode}</h3>
+                <p>You will receive confirmation soon.</p>
+                <p><b>Estimated Delivery Time: ~30 Minutes</b></p>
+              </div>
+            `;
+
+          } else {
+            alert("Payment Verification Failed ❌");
+          }
+
+        });
+
+      }
+    };
+
+    var rzp = new Razorpay(options);
+    rzp.open();
+
+  });
+}
+
+</script>
+
+</body>
+</html>

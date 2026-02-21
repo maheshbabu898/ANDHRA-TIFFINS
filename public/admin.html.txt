@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Admin Orders – Andhra Tiffens</title>
+  <meta charset="UTF-8">
+  <style>
+    body {
+      font-family: Arial;
+      background: #f6f6f6;
+      padding: 20px;
+    }
+    h2 {
+      text-align: center;
+      color: #7b2d26;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      background: white;
+    }
+    th, td {
+      padding: 10px;
+      border-bottom: 1px solid #ddd;
+      text-align: center;
+      font-size: 14px;
+    }
+    th {
+      background: #f3e1d3;
+    }
+    tr:hover {
+      background: #fafafa;
+    }
+    .order-id {
+      font-weight: bold;
+      color: #2e7d32;
+    }
+    .addr {
+      max-width: 200px;
+      white-space: pre-wrap;
+    }
+  </style>
+</head>
+<body>
+
+<h2>📋 Andhra Tiffens – Orders</h2>
+
+<table>
+  <thead>
+    <tr>
+      <th>Order ID</th>
+      <th>Mobile</th>
+      <th>Address</th>
+      <th>Items</th>
+      <th>Subtotal</th>
+      <th>Delivery</th>
+      <th>Total</th>
+      <th>Time</th>
+    </tr>
+  </thead>
+  <tbody id="body"></tbody>
+</table>
+
+<script>
+fetch('/orders')
+  .then(res => res.json())
+  .then(data => {
+    const body = document.getElementById('body');
+
+    if (data.length === 0) {
+      body.innerHTML = `<tr><td colspan="8">No orders yet</td></tr>`;
+      return;
+    }
+
+    data.forEach(o => {
+      body.innerHTML += `
+        <tr>
+          <td class="order-id">${o.order_code}</td>
+          <td>${o.mobile || '-'}</td>
+          <td class="addr">${o.address || '-'}</td>
+          <td>
+            ${JSON.parse(o.items).map(i => 
+              i.name + ' x' + i.qty
+            ).join('<br>')}
+          </td>
+          <td>₹${o.subtotal}</td>
+          <td>₹${o.delivery_charge}</td>
+          <td><b>₹${o.total}</b></td>
+          <td>${o.created_at}</td>
+        </tr>
+      `;
+    });
+  })
+  .catch(() => {
+    document.body.innerHTML = '<h3>Error loading orders</h3>';
+  });
+</script>
+
+</body>
+</html>
