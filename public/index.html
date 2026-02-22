@@ -135,15 +135,17 @@
 </section>
 
 <div class="total-bar">
+
+  <b>Delivery: ₹ <span id="delivery">0</span></b><br>
   <b>Total: ₹ <span id="total">0</span></b>
 
   <input id="name" placeholder="Your Name">
-  <input id="mobile" placeholder="Mobile Number">
+  <input id="mobile"  placeholder="Mobile Number">
   <input id="address" placeholder="Delivery Address">
 
   <button class="order-btn" onclick="placeOrder()">Pay & Place Order</button>
-</div>
 
+</div>
 <script>
 
 let cart = [];
@@ -221,9 +223,18 @@ function renderCart() {
     `;
   });
 
-  let delivery = subtotal > 0 && subtotal < 120 ? 30 : 0;
-  let total = subtotal + delivery;
+  let hasMeals = cart.some(item =>
+  item.name === "Veg Meals" ||
+  item.name === "Non-Veg Meals"
+);
 
+let delivery = 0;
+
+if (!hasMeals && subtotal > 0 && subtotal < 120) {
+  delivery = 30;
+}
+  let total = subtotal + delivery;
+  document.getElementById("delivery").innerText = delivery;
   document.getElementById("total").innerText = total;
 }
 
@@ -241,7 +252,20 @@ function placeOrder() {
     return;
   }
 
-  const subtotal = cart.reduce((sum, item) => sum + item.price * item.qty, 0);
+ const subtotal = cart.reduce((sum, item) => sum + item.price * item.qty, 0);
+
+let hasMeals = cart.some(item =>
+  item.name === "Veg Meals" ||
+  item.name === "Non-Veg Meals"
+);
+
+let delivery = 0;
+
+if (!hasMeals && subtotal > 0 && subtotal < 120) {
+  delivery = 30;
+}
+
+const total = subtotal + delivery;
 
   fetch('/create-order', {
     method: 'POST',
