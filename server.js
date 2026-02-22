@@ -1,4 +1,5 @@
 const ADMIN_KEY = "andhra_admin_2026";
+
 const express = require('express');
 const sqlite3 = require('sqlite3').verbose();
 const Razorpay = require('razorpay');
@@ -6,29 +7,36 @@ const crypto = require('crypto');
 const cors = require('cors');
 
 const app = express();
+
 app.use(cors());
 app.use(express.json());
+
+// Protect admin page
 app.use('/admin.html', (req, res, next) => {
-
   const key = req.query.key;
-
   if (key === ADMIN_KEY) {
     next();
   } else {
     res.status(403).send("Access Denied 🔒");
   }
-
 });
+
+// Serve static files
 app.use(express.static('public'));
 
+// Force home route
+app.get('/', (req, res) => {
+  res.sendFile(__dirname + '/public/index.html');
+});
+
+// Razorpay keys
 const KEY_ID = process.env.KEY_ID;
-const KEY_SECRET = process.env.KEY_ID;
+const KEY_SECRET = process.env.KEY_SECRET;
 
 const razorpay = new Razorpay({
   key_id: KEY_ID,
   key_secret: KEY_SECRET
 });
-
 // ---------------- DATABASE ----------------
 
 
