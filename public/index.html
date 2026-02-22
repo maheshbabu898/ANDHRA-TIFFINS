@@ -136,11 +136,7 @@
 
 <div class="total-bar">
 
-<button onclick="loadMyOrders()" style="margin-top:10px;background:#444;">
-  📦 My Orders
-</button>
 
-<div id="myOrdersContainer" style="margin-top:15px;"></div>
   <b>Delivery: ₹ <span id="delivery">0</span></b><br>
   <b>Total: ₹ <span id="total">0</span></b>
 
@@ -149,52 +145,14 @@
   <input id="address" placeholder="Delivery Address">
 
   <button class="order-btn" onclick="placeOrder()">Pay & Place Order</button>
+<button onclick="loadMyOrders()" style="margin-top:10px;background:#444;">
+  📦 My Orders
+</button>
 
+<div id="myOrdersContainer" style="margin-top:15px;"></div>
 </div>
 <script>
-function loadMyOrders() {
 
-  const mobile = document.getElementById("mobile").value;
-
-  if (!mobile) {
-    alert("Enter your mobile number first");
-    return;
-  }
-
-  fetch('/my-orders/' + mobile)
-  .then(res => res.json())
-  .then(data => {
-
-    const container = document.getElementById("myOrdersContainer");
-    container.innerHTML = "";
-
-    if (data.length === 0) {
-      container.innerHTML = "<p>No previous orders found.</p>";
-      return;
-    }
-
-    data.forEach(order => {
-
-      container.innerHTML += `
-        <div style="
-          background:white;
-          padding:10px;
-          margin-top:10px;
-          border-radius:6px;
-          box-shadow:0 2px 5px rgba(0,0,0,0.1);
-        ">
-          <b>Order ID:</b> ${order.orderCode}<br>
-          <b>Amount:</b> ₹${order.total}<br>
-          <b>Time:</b> ${order.created_at}<br>
-          <b>Status:</b> ${order.order_status}
-        </div>
-      `;
-
-    });
-
-  });
-
-}
 let cart = [];
 // 🔄 Check order approval every 8 seconds
 setInterval(() => {
@@ -363,20 +321,22 @@ const total = subtotal + delivery;
         .then(result => {
 
           if (result.success) {
-            localStorage.setItem("lastOrderCode", data.orderCode);
 
-            document.body.innerHTML = `
-              <div style="text-align:center;padding:40px;font-family:Arial;">
-                <h2 style="color:green;">✅ Order Placed Successfully</h2>
-                <h3>Order ID: ${data.orderCode}</h3>
-                <p>You will receive confirmation soon.</p>
-                <p><b>Estimated Delivery Time: ~30 Minutes</b></p>
-              </div>
-            `;
+  localStorage.setItem("lastOrderCode", data.orderCode);
 
-          } else {
-            alert("Payment Verification Failed ❌");
-          }
+  document.body.innerHTML = `
+    <div style="text-align:center;padding:30px;font-family:Arial;">
+      <h2 style="color:green;">✅ Order Placed Successfully</h2>
+      <h3>Order ID: ${data.orderCode}</h3>
+      <p>You will receive confirmation soon.</p>
+      <p><b>Estimated Delivery Time: ~30 Minutes</b></p>
+
+      <div id="autoOrderDetails" style="margin-top:20px;"></div>
+    </div>
+  `;
+
+  setTimeout(showLatestOrder, 1000);
+}
 
         });
 
@@ -387,6 +347,79 @@ const total = subtotal + delivery;
     rzp.open();
 
   });
+}
+function loadMyOrders() {
+
+  const mobile = document.getElementById("mobile").value;
+
+  if (!mobile) {
+    alert("Enter your mobile number first");
+    return;
+  }
+
+  fetch('/my-orders/' + mobile)
+  .then(res => res.json())
+  .then(data => {
+
+    const container = document.getElementById("myOrdersContainer");
+    container.innerHTML = "";
+
+    if (data.length === 0) {
+      container.innerHTML = "<p>No previous orders found.</p>";
+      return;
+    }
+
+    data.forEach(order => {
+
+      container.innerHTML += `
+        <div style="
+          background:white;
+          padding:10px;
+          margin-top:10px;
+          border-radius:6px;
+          box-shadow:0 2px 5px rgba(0,0,0,0.1);
+        ">
+          <b>Order ID:</b> ${order.orderCode}<br>
+          <b>Amount:</b> ₹${order.total}<br>
+          <b>Time:</b> ${order.created_at}<br>
+          <b>Status:</b> ${order.order_status}
+        </div>
+      `;
+
+    });
+
+  });
+
+}
+function showLatestOrder() {
+
+  const orderCode = localStorage.getItem("lastOrderCode");
+  if (!orderCode) return;
+
+  fetch('/my-orders/' + document.getElementById("mobile").value)
+  .then(res => res.json())
+  .then(allOrders => {
+
+    const order = allOrders.find(o => o.orderCode === orderCode);
+    if (!order) return;
+
+    document.getElementById("autoOrderDetails").innerHTML = `
+      <div style="
+        background:white;
+        padding:15px;
+        border-radius:8px;
+        box-shadow:0 2px 6px rgba(0,0,0,0.15);
+        margin-top:10px;
+      ">
+        <b>Order ID:</b> ${order.orderCode}<br>
+        <b>Amount:</b> ₹${order.total}<br>
+        <b>Status:</b> ${order.order_status}<br>
+        <b>Time:</b> ${order.created_at}
+      </div>
+    `;
+
+  });
+
 }
 
 </script>
