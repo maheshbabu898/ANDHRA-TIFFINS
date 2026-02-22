@@ -37,21 +37,36 @@ function loadOrders(){
     container.innerHTML = "";
 
     data.forEach(order=>{
-      container.innerHTML += `
-        <div class="card">
-          <b>Order ID:</b> ${order.orderCode}<br>
-          <b>Name:</b> ${order.name}<br>
-          <b>Mobile:</b> ${order.mobile}<br>
-          <b>Total:</b> ₹${order.total}<br>
-          <b>Address:</b> ${order.address}<br>
-          <b>Payment:</b> ${order.payment_status}<br>
-          <b>Status:</b> ${order.order_status}<br>
-          ${order.order_status !== 'Approved'
-            ? `<button onclick="approveOrder('${order.orderCode}')">Approve</button>`
-            : `<span style="color:green;">Approved ✅</span>`
-          }
-        </div>
-      `;
+     let itemsHtml = "";
+
+if (order.items) {
+  try {
+    const parsedItems = JSON.parse(order.items);
+    parsedItems.forEach(i => {
+      itemsHtml += `${i.name} x ${i.qty}<br>`;
+    });
+  } catch (e) {
+    itemsHtml = order.items;
+  }
+}
+
+container.innerHTML += `
+  <div class="card">
+    <b>Order ID:</b> ${order.orderCode}<br>
+    <b>Name:</b> ${order.name}<br>
+    <b>Mobile:</b> ${order.mobile}<br>
+    <b>Items:</b><br> ${itemsHtml}<br>
+    <b>Total:</b> ₹${order.total}<br>
+    <b>Address:</b> ${order.address}<br>
+    <b>Payment:</b> ${order.payment_status}<br>
+    <b>Status:</b> ${order.order_status}<br>
+
+    ${order.order_status !== 'Approved'
+      ? `<button onclick="approveOrder('${order.orderCode}')">Approve</button>`
+      : `<span style="color:green;">Approved ✅</span>`
+    }
+  </div>
+`;
     });
   });
 }
