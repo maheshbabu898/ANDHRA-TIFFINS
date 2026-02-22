@@ -1,6 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
+<audio id="bellSound" src="https://actions.google.com/sounds/v1/alarms/digital_watch_alarm_long.ogg" preload="auto"></audio>
   <title>Admin Panel - Andhra Tiffens</title>
   <meta charset="UTF-8">
   <style>
@@ -29,10 +30,16 @@
 <div id="itemsContainer"></div>
 
 <script>
+let lastOrderCount = 0;
 function loadOrders(){
   fetch('/orders')
   .then(res=>res.json())
   .then(data=>{
+// 🔔 Play sound if new order comes
+if (data.length > lastOrderCount) {
+  document.getElementById("bellSound").play();
+}
+lastOrderCount = data.length;
     const container = document.getElementById("ordersContainer");
     container.innerHTML = "";
 

@@ -230,7 +230,22 @@ app.post('/approve-order', (req, res) => {
 // ---------------- START SERVER ----------------
 // ---------------- START SERVER ----------------
 const PORT = process.env.PORT || 5000;
+app.get('/order-status/:code', (req, res) => {
 
+  db.get(
+    "SELECT order_status FROM orders WHERE orderCode = ?",
+    [req.params.code],
+    (err, row) => {
+
+      if (err || !row) {
+        return res.json({ order_status: "Pending" });
+      }
+
+      res.json(row);
+    }
+  );
+
+});
 app.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`);
 });

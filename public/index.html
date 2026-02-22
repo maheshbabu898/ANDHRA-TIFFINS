@@ -149,6 +149,24 @@
 <script>
 
 let cart = [];
+// 🔄 Check order approval every 8 seconds
+setInterval(() => {
+
+  const orderCode = localStorage.getItem("lastOrderCode");
+  if (!orderCode) return;
+
+  fetch('/order-status/' + orderCode)
+  .then(res => res.json())
+  .then(data => {
+
+    if (data.order_status === "Approved") {
+      alert("✅ Your order has been approved! Delivery in 30 minutes.");
+      localStorage.removeItem("lastOrderCode");
+    }
+
+  });
+
+}, 8000);
 
 /* ================= MENU DYNAMIC LOAD ================= */
 
@@ -298,6 +316,7 @@ const total = subtotal + delivery;
         .then(result => {
 
           if (result.success) {
+            localStorage.setItem("lastOrderCode", data.orderCode);
 
             document.body.innerHTML = `
               <div style="text-align:center;padding:40px;font-family:Arial;">
