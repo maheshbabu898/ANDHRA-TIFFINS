@@ -136,6 +136,11 @@
 
 <div class="total-bar">
 
+<button onclick="loadMyOrders()" style="margin-top:10px;background:#444;">
+  📦 My Orders
+</button>
+
+<div id="myOrdersContainer" style="margin-top:15px;"></div>
   <b>Delivery: ₹ <span id="delivery">0</span></b><br>
   <b>Total: ₹ <span id="total">0</span></b>
 
@@ -147,7 +152,49 @@
 
 </div>
 <script>
+function loadMyOrders() {
 
+  const mobile = document.getElementById("mobile").value;
+
+  if (!mobile) {
+    alert("Enter your mobile number first");
+    return;
+  }
+
+  fetch('/my-orders/' + mobile)
+  .then(res => res.json())
+  .then(data => {
+
+    const container = document.getElementById("myOrdersContainer");
+    container.innerHTML = "";
+
+    if (data.length === 0) {
+      container.innerHTML = "<p>No previous orders found.</p>";
+      return;
+    }
+
+    data.forEach(order => {
+
+      container.innerHTML += `
+        <div style="
+          background:white;
+          padding:10px;
+          margin-top:10px;
+          border-radius:6px;
+          box-shadow:0 2px 5px rgba(0,0,0,0.1);
+        ">
+          <b>Order ID:</b> ${order.orderCode}<br>
+          <b>Amount:</b> ₹${order.total}<br>
+          <b>Time:</b> ${order.created_at}<br>
+          <b>Status:</b> ${order.order_status}
+        </div>
+      `;
+
+    });
+
+  });
+
+}
 let cart = [];
 // 🔄 Check order approval every 8 seconds
 setInterval(() => {

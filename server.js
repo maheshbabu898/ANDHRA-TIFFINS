@@ -246,6 +246,24 @@ app.get('/order-status/:code', (req, res) => {
   );
 
 });
+app.get('/my-orders/:mobile', (req, res) => {
+
+  const mobile = req.params.mobile;
+
+  db.all(
+    "SELECT orderCode, total, created_at, order_status FROM orders WHERE mobile = ? ORDER BY created_at DESC",
+    [mobile],
+    (err, rows) => {
+
+      if (err) {
+        return res.json([]);
+      }
+
+      res.json(rows);
+    }
+  );
+
+});
 app.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`);
 });
