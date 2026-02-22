@@ -21,8 +21,8 @@ app.use('/admin.html', (req, res, next) => {
 });
 app.use(express.static('public'));
 
-const KEY_ID = "rzp_test_SInvVuxOliWSkv";
-const KEY_SECRET = "9Dt2FOttTxxsCtLWV92mIEm1";
+const KEY_ID = process.env.KEY_ID;
+const KEY_SECRET = process.env.KEY_ID;
 
 const razorpay = new Razorpay({
   key_id: KEY_ID,
@@ -220,8 +220,8 @@ app.post('/approve-order', (req, res) => {
 });
 
 // ---------------- START SERVER ----------------
-app.listen(5000, () => {
-  const PORT = process.env.PORT || 5000;
+// ---------------- START SERVER ----------------
+const PORT = process.env.PORT || 5000;
 
 app.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`);
