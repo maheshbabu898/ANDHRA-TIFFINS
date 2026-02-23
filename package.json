@@ -17,6 +17,7 @@
     "express": "^5.2.1",
     "express-session": "^1.19.0",
     "mongoose": "^9.2.1",
+    "pg": "^8.18.0",
     "razorpay": "^2.9.6",
     "sqlite3": "^5.1.7"
   }
