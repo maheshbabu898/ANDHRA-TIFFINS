@@ -220,7 +220,37 @@ app.get('/my-orders/:mobile', async (req, res) => {
 });
 
 /* ================= START SERVER ================= */
+app.get('/items', (req, res) => {
 
+  res.json([
+    { name: "Idli (3)", price: 20, image: "idli.jpg", available: true },
+    { name: "Plain Dosa", price: 20, image: "dosa.jpg", available: true },
+    { name: "Pidi Dosa", price: 25, image: "dosa.jpg", available: true },
+    { name: "Onion Dosa", price: 25, image: "dosa.jpg", available: true },
+    { name: "Karam Dosa", price: 25, image: "dosa.jpg", available: true },
+    { name: "Masala Dosa", price: 35, image: "masala-dosa.jpg", available: true },
+    { name: "Egg Masala Dosa", price: 50, image: "egg-dosa.jpg", available: true },
+    { name: "Ghee Dosa", price: 40, image: "dosa.jpg", available: true },
+    { name: "Kal Dosa (2)", price: 45, image: "dosa.jpg", available: true },
+    { name: "Chapati (3)", price: 60, image: "chapathi.jpg", available: true },
+
+    { name: "Single Egg Dosa", price: 35, image: "egg-dosa.jpg", available: true },
+    { name: "Double Egg Dosa", price: 45, image: "egg-dosa.jpg", available: true },
+    { name: "Omelette / Half Boil", price: 15, image: "omelette.jpg", available: true },
+
+    { name: "Bajji (2)", price: 20, image: "bajji.jpg", available: true },
+    { name: "Egg Bajji (2)", price: 20, image: "egg-bajji.jpg", available: true },
+    { name: "Potato Bajji (2)", price: 20, image: "potato-bajji.jpg", available: true },
+    { name: "Bonda (6)", price: 20, image: "bonda.jpg", available: true },
+    { name: "Onion Bonda (2)", price: 20, image: "onion-bonda.jpg", available: true },
+    { name: "Mysore Bonda (2)", price: 20, image: "mysore-bonda.jpg", available: true },
+    { name: "Sweet Bonda (3)", price: 20, image: "sweet-bonda.jpg", available: true },
+
+    { name: "Veg Meals", price: 100, image: "veg-meals.jpg", available: true },
+    { name: "Non-Veg Meals", price: 120, image: "non-veg-meals.jpg", available: true }
+  ]);
+
+});
 app.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`);
 });
