@@ -208,7 +208,7 @@ app.get('/order-status/:code', async (req, res) => {
 app.get('/my-orders/:mobile', async (req, res) => {
 
   const result = await pool.query(
-    `SELECT orderCode, total, created_at, order_status
+    `SELECT ordercode, total, created_at, order_status
      FROM orders
      WHERE mobile=$1
      ORDER BY created_at DESC`,
