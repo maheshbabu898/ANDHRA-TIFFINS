@@ -61,11 +61,6 @@ if (order.items) {
   }
 }
 
-if (order.items && Array.isArray(order.items)) {
-  order.items.forEach(item => {
-    itemsHtml += `${item.name} x ${item.qty}<br>`;
-  });
-}
 container.innerHTML += `
   <div class="card">
     <b>Order ID:</b> ${order.ordercode}<br>
