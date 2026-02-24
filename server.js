@@ -43,7 +43,6 @@ CREATE TABLE IF NOT EXISTS orders (
 `);
 
 /* ================= TWILIO CLIENT ================= */
-const client = twilio(process.env.TWILIO_SID, process.env.TWILIO_AUTH);
 
 /* ================= HELPER FUNCTIONS ================= */
 function sendAdminAlert(order){
