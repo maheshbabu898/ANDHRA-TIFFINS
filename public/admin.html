@@ -83,13 +83,12 @@ container.innerHTML += `
 }
 
 function approveOrder(code){
-  fetch('/approve-order',{
-    method:'POST',
-    headers:{'Content-Type':'application/json'},
-    body:JSON.stringify({ ordercode:code })
-  }).then(()=>loadOrders());
+  fetch('/approve/' + code, {
+    method: 'POST'
+  })
+  .then(res => res.json())
+  .then(() => loadOrders());
 }
-
 function loadItems(){
   fetch('/items')
   .then(res=>res.json())

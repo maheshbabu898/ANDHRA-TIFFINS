@@ -379,7 +379,7 @@ function loadMyOrders() {
           border-radius:6px;
           box-shadow:0 2px 5px rgba(0,0,0,0.1);
         ">
-          <b>Order ID:</b> ${order.orderCode}<br>
+          <b>Order ID:</b> ${order.ordercode}<br>
           <b>Amount:</b> ₹${order.total}<br>
           <b>Time:</b> ${order.created_at}<br>
           <b>Status:</b> ${order.order_status}
@@ -400,7 +400,7 @@ function showLatestOrder() {
   .then(res => res.json())
   .then(allOrders => {
 
-    const order = allOrders.find(o => o.orderCode === orderCode);
+    const order = allOrders.find(o => o.ordercode === ordercode);
     if (!order) return;
 
     document.getElementById("autoOrderDetails").innerHTML = `
@@ -411,7 +411,7 @@ function showLatestOrder() {
         box-shadow:0 2px 6px rgba(0,0,0,0.15);
         margin-top:10px;
       ">
-        <b>Order ID:</b> ${order.orderCode}<br>
+        <b>Order ID:</b> ${order.ordercode}<br>
         <b>Amount:</b> ₹${order.total}<br>
         <b>Status:</b> ${order.order_status}<br>
         <b>Time:</b> ${order.created_at}
