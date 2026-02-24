@@ -5,7 +5,12 @@ const Razorpay = require('razorpay');
 const crypto = require('crypto');
 const cors = require('cors');
 const { Pool } = require('pg');
+const twilio = require('twilio');
 
+const client = twilio(
+  process.env.TWILIO_SID,
+  process.env.TWILIO_AUTH
+);
 const app = express();
 app.use(cors());
 app.use(express.json());
@@ -37,6 +42,53 @@ CREATE TABLE IF NOT EXISTS orders (
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 `);
+const client = require('twilio')(process.env.TWILIO_SID, process.env.TWILIO_AUTH);
+const client = require('twilio')(accountSid, authToken);
+
+function sendAdminAlert(order){
+
+  const message =
+`🛒 NEW ORDER RECEIVED
+Order Code: ${order.code}
+Name: ${order.name}
+Total: ₹${order.total}`;
+
+  const admins = [
+    'whatsapp:+919989506803',
+    'whatsapp:+919908239101'
+  ];
+
+  admins.forEach(num=>{
+    client.messages.create({
+      from: 'whatsapp:+14155238886',
+      to: num,
+      body: message
+    })
+    .then(()=>console.log("Admin notified"))
+    .catch(err=>console.log(err));
+  });
+}
+function sendCustomerApprovedMsg(order){
+
+  const msg =
+`✅ Your order is approved!
+
+🍽 Andhra Tiffens
+Order Code: ${order.ordercode}
+Total: ₹${order.total}
+Your order is confirmed and will arrive shortly 🛵
+
+Thank you for ordering 🙏`;
+
+
+  client.messages.create({
+    from: 'whatsapp:+14155238886',
+    to: `whatsapp:+91${order.mobile}`,
+    body: msg
+  })
+  .then(()=>console.log("Customer notified"))
+  .catch(err=>console.log("WhatsApp error",err));
+}
 
 /* ================= RAZORPAY ================= */
 
@@ -97,6 +149,8 @@ app.post('/create-order', async (req, res) => {
         "Created"
       ]
     );
+sendAdminAlert(order);
+
 
     res.json({
       key: process.env.KEY_ID,
@@ -181,6 +235,15 @@ app.post('/approve/:code', async (req, res) => {
     "UPDATE orders SET order_status='Approved' WHERE orderCode=$1",
     [req.params.code]
   );
+const result = await pool.query(
+    `SELECT * FROM orders WHERE ordercode=$1`,
+    [code]
+  );
+
+  const order = result.rows[0];
+
+  // 3️⃣ SEND WHATSAPP TO CUSTOMER 👇
+  sendCustomerApprovedMsg(order);
 
   res.json({ success: true });
 
