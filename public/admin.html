@@ -56,10 +56,16 @@ if (order.items) {
     itemsHtml = order.items;
   }
 }
+let itemsHtml = "";
 
+if (order.items && Array.isArray(order.items)) {
+  order.items.forEach(item => {
+    itemsHtml += `${item.name} x ${item.qty}<br>`;
+  });
+}
 container.innerHTML += `
   <div class="card">
-    <b>Order ID:</b> ${order.orderCode}<br>
+    <b>Order ID:</b> ${order.ordercode}<br>
     <b>Name:</b> ${order.name}<br>
     <b>Mobile:</b> ${order.mobile}<br>
     <b>Items:</b><br> ${itemsHtml}<br>
@@ -69,7 +75,7 @@ container.innerHTML += `
     <b>Status:</b> ${order.order_status}<br>
 
     ${order.order_status !== 'Approved'
-      ? `<button onclick="approveOrder('${order.orderCode}')">Approve</button>`
+      ? `<button onclick="approveOrder('${order.ordercode}')">Approve</button>`
       : `<span style="color:green;">Approved ✅</span>`
     }
   </div>
@@ -82,7 +88,7 @@ function approveOrder(code){
   fetch('/approve-order',{
     method:'POST',
     headers:{'Content-Type':'application/json'},
-    body:JSON.stringify({ orderCode:code })
+    body:JSON.stringify({ ordercode:code })
   }).then(()=>loadOrders());
 }
 
