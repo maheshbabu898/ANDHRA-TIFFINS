@@ -1,5 +1,4 @@
 require('dotenv').config();
-
 const express = require('express');
 const Razorpay = require('razorpay');
 const crypto = require('crypto');
@@ -7,10 +6,12 @@ const cors = require('cors');
 const { Pool } = require('pg');
 const twilio = require('twilio');
 
+
 const client = twilio(
   process.env.TWILIO_SID,
   process.env.TWILIO_AUTH
 );
+
 const app = express();
 app.use(cors());
 app.use(express.json());
@@ -20,14 +21,12 @@ const PORT = process.env.PORT || 5000;
 const ADMIN_KEY = "andhra_admin_2026";
 
 /* ================= POSTGRESQL CONNECTION ================= */
-
 const pool = new Pool({
   connectionString: process.env.DATABASE_URL,
   ssl: { rejectUnauthorized: false }
 });
 
 /* ================= CREATE TABLE ================= */
-
 pool.query(`
 CREATE TABLE IF NOT EXISTS orders (
   id SERIAL PRIMARY KEY,
@@ -42,22 +41,17 @@ CREATE TABLE IF NOT EXISTS orders (
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 `);
-const client = require('twilio')(process.env.TWILIO_SID, process.env.TWILIO_AUTH);
-const client = require('twilio')(accountSid, authToken);
 
+/* ================= TWILIO CLIENT ================= */
+const client = twilio(process.env.TWILIO_SID, process.env.TWILIO_AUTH);
+
+/* ================= HELPER FUNCTIONS ================= */
 function sendAdminAlert(order){
-
-  const message =
-`🛒 NEW ORDER RECEIVED
-Order Code: ${order.code}
-Name: ${order.name}
-Total: ₹${order.total}`;
-
+  const message = `🛒 NEW ORDER RECEIVED\nOrder Code: ${order.code}\nName: ${order.name}\nTotal: ₹${order.total}`;
   const admins = [
     'whatsapp:+919989506803',
     'whatsapp:+919908239101'
   ];
-
   admins.forEach(num=>{
     client.messages.create({
       from: 'whatsapp:+14155238886',
@@ -65,50 +59,35 @@ Total: ₹${order.total}`;
       body: message
     })
     .then(()=>console.log("Admin notified"))
-    .catch(err=>console.log(err));
+    .catch(err=>console.log("WhatsApp admin error", err));
   });
 }
+
 function sendCustomerApprovedMsg(order){
-
-  const msg =
-`✅ Your order is approved!
-
-🍽 Andhra Tiffens
-Order Code: ${order.ordercode}
-Total: ₹${order.total}
-Your order is confirmed and will arrive shortly 🛵
-
-Thank you for ordering 🙏`;
-
-
+  const msg = `✅ Your order is approved!\n🍽 Andhra Tiffens\nOrder Code: ${order.ordercode}\nTotal: ₹${order.total}\nYour order is confirmed and will arrive shortly 🛵\nThank you for ordering 🙏`;
   client.messages.create({
     from: 'whatsapp:+14155238886',
     to: `whatsapp:+91${order.mobile}`,
     body: msg
   })
   .then(()=>console.log("Customer notified"))
-  .catch(err=>console.log("WhatsApp error",err));
+  .catch(err=>console.log("WhatsApp customer error", err));
 }
 
 /* ================= RAZORPAY ================= */
-
 const razorpay = new Razorpay({
   key_id: process.env.KEY_ID,
   key_secret: process.env.KEY_SECRET
 });
 
 /* ================= ROOT ROUTE ================= */
-
 app.get('/', (req, res) => {
   res.sendFile(__dirname + '/public/cart.html');
 });
 
 /* ================= CREATE ORDER ================= */
-
 app.post('/create-order', async (req, res) => {
-
   try {
-
     const { name, mobile, address, items, subtotal } = req.body;
 
     if (!name || !mobile || !address || !items) {
@@ -116,8 +95,7 @@ app.post('/create-order', async (req, res) => {
     }
 
     let hasMeals = items.some(item =>
-      item.name === "Veg Meals" ||
-      item.name === "Non-Veg Meals"
+      item.name === "Veg Meals" || item.name === "Non-Veg Meals"
     );
 
     let delivery = 0;
@@ -126,7 +104,6 @@ app.post('/create-order', async (req, res) => {
     }
 
     const total = subtotal + delivery;
-
     const orderCode = "AT" + Date.now();
 
     const razorOrder = await razorpay.orders.create({
@@ -149,8 +126,10 @@ app.post('/create-order', async (req, res) => {
         "Created"
       ]
     );
-sendAdminAlert(order);
 
+    // Admin WhatsApp alert
+    const order = { code: orderCode, name, total };
+    sendAdminAlert(order);
 
     res.json({
       key: process.env.KEY_ID,
@@ -163,13 +142,10 @@ sendAdminAlert(order);
     console.log("Create order error:", err);
     res.status(500).json({ error: "Server error" });
   }
-
 });
 
 /* ================= VERIFY PAYMENT ================= */
-
 app.post('/verify-payment', async (req, res) => {
-
   const {
     razorpay_order_id,
     razorpay_payment_id,
@@ -183,76 +159,62 @@ app.post('/verify-payment', async (req, res) => {
     .digest("hex");
 
   if (generated_signature === razorpay_signature) {
-
     await pool.query(
       `UPDATE orders
        SET payment_status='Paid'
        WHERE orderCode=$1`,
       [orderCode]
     );
-
     res.json({ success: true });
-
   } else {
-
     await pool.query(
       `UPDATE orders
        SET payment_status='Failed'
        WHERE orderCode=$1`,
       [orderCode]
     );
-
     res.json({ success: false });
-
   }
-
 });
 
 /* ================= ADMIN PAGE PROTECTION ================= */
-
 app.use('/admin.html', (req, res, next) => {
   if (req.query.key === ADMIN_KEY) next();
   else res.status(403).send("Access Denied 🔒");
 });
 
 /* ================= GET ALL ORDERS (ADMIN) ================= */
-
 app.get('/orders', async (req, res) => {
-
   const result = await pool.query(
     "SELECT * FROM orders ORDER BY created_at DESC"
   );
-
   res.json(result.rows);
-
 });
 
 /* ================= APPROVE ORDER ================= */
-
 app.post('/approve/:code', async (req, res) => {
+  const code = req.params.code;
 
   await pool.query(
     "UPDATE orders SET order_status='Approved' WHERE orderCode=$1",
-    [req.params.code]
+    [code]
   );
-const result = await pool.query(
-    `SELECT * FROM orders WHERE ordercode=$1`,
+
+  const result = await pool.query(
+    `SELECT * FROM orders WHERE orderCode=$1`,
     [code]
   );
 
   const order = result.rows[0];
 
-  // 3️⃣ SEND WHATSAPP TO CUSTOMER 👇
+  // Customer WhatsApp notification
   sendCustomerApprovedMsg(order);
 
   res.json({ success: true });
-
 });
 
 /* ================= CHECK ORDER STATUS ================= */
-
 app.get('/order-status/:code', async (req, res) => {
-
   const result = await pool.query(
     "SELECT order_status FROM orders WHERE orderCode=$1",
     [req.params.code]
@@ -263,15 +225,12 @@ app.get('/order-status/:code', async (req, res) => {
   }
 
   res.json(result.rows[0]);
-
 });
 
 /* ================= MY ORDERS ================= */
-
 app.get('/my-orders/:mobile', async (req, res) => {
-
   const result = await pool.query(
-    `SELECT ordercode, total, created_at, order_status
+    `SELECT orderCode, total, created_at, order_status
      FROM orders
      WHERE mobile=$1
      ORDER BY created_at DESC`,
@@ -279,10 +238,9 @@ app.get('/my-orders/:mobile', async (req, res) => {
   );
 
   res.json(result.rows);
-
 });
 
-/* ================= START SERVER ================= */
+/* ================= MENU ITEMS ================= */
 app.get('/items', (req, res) => {
 
   res.json([
@@ -314,6 +272,8 @@ app.get('/items', (req, res) => {
   ]);
 
 });
+
+/* ================= START SERVER ================= */
 app.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`);
 });
