@@ -48,15 +48,18 @@ lastOrderCount = data.length;
 
 if (order.items) {
   try {
-    const parsedItems = JSON.parse(order.items);
+    const parsedItems = typeof order.items === "string"
+      ? JSON.parse(order.items)
+      : order.items;
+
     parsedItems.forEach(i => {
       itemsHtml += `${i.name} x ${i.qty}<br>`;
     });
+
   } catch (e) {
-    itemsHtml = order.items;
+    itemsHtml = "Unable to read items";
   }
 }
-
 
 if (order.items && Array.isArray(order.items)) {
   order.items.forEach(item => {
